@@ -43,6 +43,15 @@ make ssh-setup
 
 This generates an ed25519 key (if needed) and copies it to the NAS.
 
+Synology requires strict permissions for SSH key auth. Fix on the NAS if needed:
+
+```bash
+ssh nas "chmod 755 ~ && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
+```
+
+> **Note:** DSM config backups do not include home directory contents or permissions.
+> After a DSM restore, re-run `make ssh-setup` and fix permissions.
+
 #### TODO
 - setup SSH config via nix: https://github.com/nix-community/home-manager/blob/master/modules/programs/ssh.nix
 

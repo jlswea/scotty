@@ -83,5 +83,7 @@ ssh-setup: ## Copy SSH key to NAS (one-time setup)
 		ssh-keygen -t ed25519 -f $(HOME)/.ssh/id_ed25519 -N ""; \
 	fi
 	ssh-copy-id $(NAS_SSH)
+	@echo "Fixing Synology SSH permissions..."
+	ssh $(NAS_SSH) "chmod 755 ~ && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
 	@echo "Verifying..."
 	ssh -o BatchMode=yes $(NAS_SSH) "echo 'SSH key auth works!'"
