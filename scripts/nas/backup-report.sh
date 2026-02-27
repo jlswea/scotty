@@ -41,15 +41,17 @@ else
     echo "DSM config export: NEVER - no exports found"
 fi
 
-# Paperless DB dump freshness
-LATEST_DB=$(ls -1t "${NAS_BACKUP_PATH}/paperless-db"/paperless-db-*.sql.gz 2>/dev/null | head -1)
-if [ -n "${LATEST_DB:-}" ]; then
-    DB_SIZE=$(du -h "$LATEST_DB" | cut -f1)
-    echo "Paperless DB dump: OK - latest: $(basename "$LATEST_DB") ($DB_SIZE)"
-    DB_COUNT=$(ls -1 "${NAS_BACKUP_PATH}/paperless-db"/paperless-db-*.sql.gz 2>/dev/null | wc -l)
-    echo "  ($DB_COUNT dumps stored)"
+# Paperless export freshness
+EXPORT_DIR="${NAS_PAPERLESS_EXPORT_PATH}"
+if [ -d "$EXPORT_DIR" ] && [ -f "$EXPORT_DIR/manifest.json" ]; then
+    EXPORT_MTIME=$(stat -c '%Y' "$EXPORT_DIR/manifest.json" 2>/dev/null || stat -f '%m' "$EXPORT_DIR/manifest.json" 2>/dev/null)
+    if [ -n "${EXPORT_MTIME:-}" ]; then
+        EXPORT_DATE=$(date -d "@${EXPORT_MTIME}" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date -r "${EXPORT_MTIME}" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo "unknown")
+        EXPORT_SIZE=$(du -sh "$EXPORT_DIR" 2>/dev/null | cut -f1)
+        echo "Paperless export:  OK - last export: $EXPORT_DATE ($EXPORT_SIZE)"
+    fi
 else
-    echo "Paperless DB dump: NEVER - no dumps found"
+    echo "Paperless export:  NEVER - no export found (run export-paperless.sh)"
 fi
 
 echo

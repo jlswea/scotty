@@ -33,6 +33,11 @@ Mac (this machine)                     Synology NAS
 
 ## Prerequisites
 
+### Enable rsync on NAS
+
+DSM → **Control Panel → File Services → rsync** → enable rsync service.
+Without this, rsync over SSH will fail with "Permission denied".
+
 ### SSH key auth (Mac → NAS)
 
 The NAS must be reachable via `ssh nas` (configured in `~/.ssh/config`).
@@ -113,7 +118,7 @@ After `make deploy-scripts`, set up nightly backups in DSM:
 5. Schedule: Daily at 02:00
 6. Command:
    ```bash
-   /volume1/scripts/scotty/export-dsm-config.sh && /volume1/scripts/scotty/backup-db.sh && /volume1/scripts/scotty/backup-to-fritzbox.sh
+   /volume1/scripts/scotty/export-dsm-config.sh && /volume1/scripts/scotty/export-paperless.sh && /volume1/scripts/scotty/backup-to-fritzbox.sh
    ```
 7. Enable email notification on abnormal termination
 
@@ -165,25 +170,18 @@ make uninstall-launchd
 
 ### Restore Paperless documents
 
-Copy exported documents back to NAS and re-import:
+Copy the document_exporter output back to NAS and re-import. This restores all documents, metadata, tags, correspondents, etc.
 
 ```bash
 # From local backup to NAS
-rsync -avz ~/NAS-Backup/paperless/export/ nas:/volume1/docker/paperless/export/
+rsync -avz ~/NAS-Backup/paperless-export/ nas:/volume1/scotty/down/
 
-# Then trigger Paperless import via the web UI or:
-ssh nas "cd /volume1/docker/paperless && docker compose exec webserver document_importer ../export"
+# Then import into Paperless:
+ssh nas "cd /volume1/docker/paperless && docker compose exec -T webserver document_importer ../export"
+# (../export is the container-internal path, mapped to ./down on the host)
 ```
 
-### Restore Paperless database
-
-```bash
-# Copy dump to NAS
-scp ~/NAS-Backup/paperless-db/paperless-db-YYYY-MM-DD_HHMMSS.sql.gz nas:/tmp/
-
-# Restore on NAS
-ssh nas "gunzip -c /tmp/paperless-db-*.sql.gz | docker compose -f /volume1/docker/paperless/docker-compose.yml --env-file /volume1/docker/paperless/env.txt exec -T db psql -U paperless paperless"
-```
+The export directory contains your original PDFs, archived versions, and a `manifest.json` with all metadata. The files are browsable even without Paperless.
 
 ### Restore DSM configuration
 

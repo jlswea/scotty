@@ -82,7 +82,7 @@ ssh-setup: ## Copy SSH key to NAS (one-time setup)
 		echo "No ed25519 key found. Generating..."; \
 		ssh-keygen -t ed25519 -f $(HOME)/.ssh/id_ed25519 -N ""; \
 	fi
-	ssh-copy-id $(NAS_SSH)
+	ssh-copy-id -i $(HOME)/.ssh/id_ed25519.pub $(NAS_SSH)
 	@echo "Fixing Synology SSH permissions..."
 	ssh $(NAS_SSH) "chmod 755 ~ && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
 	@echo "Verifying..."

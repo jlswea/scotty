@@ -37,32 +37,14 @@ log "NAS reachable, starting sync..."
 
 RSYNC_OPTS=(-avz --partial --delete --human-readable)
 
-# Paperless export (documents)
+# Paperless export (documents + metadata from document_exporter)
 log "Syncing Paperless export..."
-mkdir -p "${LOCAL_BACKUP_PATH}/paperless/export"
+mkdir -p "${LOCAL_BACKUP_PATH}/paperless-export"
 rsync "${RSYNC_OPTS[@]}" \
-    "${NAS_SSH}:${NAS_PAPERLESS_DATA_PATH}/export/" \
-    "${LOCAL_BACKUP_PATH}/paperless/export/" \
+    "${NAS_SSH}:${NAS_PAPERLESS_EXPORT_PATH}/" \
+    "${LOCAL_BACKUP_PATH}/paperless-export/" \
     >> "$LOG_FILE" 2>&1
 log "Paperless export sync done"
-
-# Paperless consume folder
-log "Syncing Paperless consume..."
-mkdir -p "${LOCAL_BACKUP_PATH}/paperless/consume"
-rsync "${RSYNC_OPTS[@]}" \
-    "${NAS_SSH}:${NAS_PAPERLESS_DATA_PATH}/consume/" \
-    "${LOCAL_BACKUP_PATH}/paperless/consume/" \
-    >> "$LOG_FILE" 2>&1
-log "Paperless consume sync done"
-
-# Paperless DB dumps
-log "Syncing Paperless DB dumps..."
-mkdir -p "${LOCAL_BACKUP_PATH}/paperless-db"
-rsync "${RSYNC_OPTS[@]}" \
-    "${NAS_SSH}:${NAS_BACKUP_PATH}/paperless-db/" \
-    "${LOCAL_BACKUP_PATH}/paperless-db/" \
-    >> "$LOG_FILE" 2>&1
-log "Paperless DB sync done"
 
 # DSM config exports
 log "Syncing DSM config exports..."

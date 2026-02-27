@@ -58,7 +58,7 @@ if ! mountpoint -q "$FRITZBOX_MOUNT" 2>/dev/null; then
 fi
 
 DEST="${FRITZBOX_MOUNT}/nas-backup"
-mkdir -p "${DEST}/photos" "${DEST}/paperless" "${DEST}/dsm-config" "${DEST}/paperless-db"
+mkdir -p "${DEST}/photos" "${DEST}/paperless-export" "${DEST}/dsm-config"
 
 # Backup photos
 log "Syncing photos..."
@@ -69,28 +69,13 @@ if ! rsync -av --delete --partial \
     exit 1
 fi
 
-# Backup Paperless data (docker volumes via compose export path + consume)
-log "Syncing Paperless data..."
+# Backup Paperless export (documents + metadata from document_exporter)
+log "Syncing Paperless export..."
 if ! rsync -av --delete --partial \
-    "${NAS_PAPERLESS_DATA_PATH}/export/" "${DEST}/paperless/export/" \
+    "${NAS_PAPERLESS_EXPORT_PATH}/" "${DEST}/paperless-export/" \
     >> "$LOG_FILE" 2>&1; then
     notify_failure "Failed to sync Paperless export to Fritz!Box"
     exit 1
-fi
-
-if ! rsync -av --delete --partial \
-    "${NAS_PAPERLESS_DATA_PATH}/consume/" "${DEST}/paperless/consume/" \
-    >> "$LOG_FILE" 2>&1; then
-    notify_failure "Failed to sync Paperless consume to Fritz!Box"
-    exit 1
-fi
-
-# Backup Paperless DB dumps
-log "Syncing Paperless DB dumps..."
-if [ -d "${NAS_BACKUP_PATH}/paperless-db" ]; then
-    rsync -av --delete --partial \
-        "${NAS_BACKUP_PATH}/paperless-db/" "${DEST}/paperless-db/" \
-        >> "$LOG_FILE" 2>&1 || true
 fi
 
 # Backup DSM config exports
